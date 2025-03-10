@@ -2,7 +2,8 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/Scalagalere.iml" filepath="$PROJECT_DIR$/.idea/Scalagalere.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tp.iml" filepath="$PROJECT_DIR$/.idea/modules/tp.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/tp.tp-build.iml" filepath="$PROJECT_DIR$/.idea/modules/tp.tp-build.iml" />
     </modules>
   </component>
 </project>
