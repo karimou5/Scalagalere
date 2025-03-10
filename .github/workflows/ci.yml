@@ -30,5 +30,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-sbt
 
+      - name: Setup Scala and SBT
+        uses: olafurpg/setup-scala@v11
+        with:
+          sbt-version: '1.9.0'
+
       - name: Lancer les tests
         run: sbt test
