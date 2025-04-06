@@ -1,0 +1,43 @@
+README - Analyseur de Types Lambda Calcul
+
+Commandes principales
+===================
+
+Avec Docker (recommandé)
+-----------------------
+Compiler le projet :
+make compile
+
+Exécuter les tests :
+make test
+
+Nettoyer les fichiers générés :
+make clean
+
+Sans Docker (avec SBT directement)
+---------------------------------
+Compiler le projet :
+sbt compile
+
+Exécuter les tests :
+sbt test
+
+Nettoyer les fichiers générés :
+sbt clean
+
+Lancer la console SBT :
+sbt
+
+Exécuter des tests spécifiques
+=============================
+Pour un groupe de tests :
+sbt "testOnly AnalyseurTest"
+
+Pour un test précis :
+sbt "testOnly AnalyseurTest -- -z \"Vérification de type\""
+
+Structure du projet
+=================
+Analyseur.scala : Implémentation de base
+AnalyseurEtendu.scala : Extension avec expressions arithmétiques
+AnalyseurTest.scala et AnalyseurEtenduTest.scala : Tests
