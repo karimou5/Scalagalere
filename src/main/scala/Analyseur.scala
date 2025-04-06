@@ -1,84 +1,75 @@
-import Analyseur.LambdaTerm.{Abs, Var}
-import Analyseur.LambdaType.FunctionType
-
 // Analyseur de types pour le lambda calcul simplement typé
 object Analyseur:
   // Types du lambda calcul
   // BasicType("Int") représente le type entier
   // BasicType("Bool") représente le type booléen
   // FunctionType(t1, t2) représente le type fonction de t1 à t2
-  // FunctionType(BasicType("Int"), BasicType("Bool")) représente le type fonction de Int à Bool (Int → Bool)
   enum LambdaType:
     case BasicType(s: String)
     case FunctionType(t1: LambdaType, t2: LambdaType)
+    
+    override def toString(): String = this match
+      case BasicType(s) => s
+      case FunctionType(t1, t2) => s"(${t1} → ${t2})"
 
   // Termes du lambda calcul
-  // val variable = LambdaTerm.Var("x")
-  // val abstraction = LambdaTerm.Abs("x", intType, LambdaTerm.Var("x"))
-  // val application = LambdaTerm.App(abstraction, LambdaTerm.Var("y")) du coup c'est égal à λx:Int.x y
+  // Var("x") représente une variable
+  // Abs("x", intType, Var("x")) représente l'abstraction λx:Int.x
+  // App(abstraction, Var("y")) représente l'application de l'abstraction à y
   enum LambdaTerm:
     case Var(varName: String)
     case Abs(varName: String, varType: LambdaType, t: LambdaTerm)
     case App(t1: LambdaTerm, t2: LambdaTerm)
+    
+    override def toString(): String = this match
+      case Var(name) => name
+      case Abs(name, tpe, body) => s"λ$name:$tpe.$body"
+      case App(t1, t2) => s"($t1 $t2)"
 
-  // Environnement qui represent le  tout ce qu'il y a écrit avant le  ⊢
+  // Environnement qui représente le contexte de typage
   type Environnement = Map[String, LambdaType]
 
-
-  // Première fonction doit vérifier le type d'un terme, prend LambdaTerm et LambdaType return true si LambdaTerm a type = LambdaType
-  def verifierType(terme: LambdaTerm, typeAttendu: LambdaType, environnement: Environnement = Map()): Boolean = {
-    terme match {
-      case Var(nomVariable) =>
-        environnement.get(nomVariable) match {
+  // Première fonction: vérifier le type d'un terme
+  def verifierType(terme: LambdaTerm, typeAttendu: LambdaType, environnement: Environnement = Map()): Boolean =
+    terme match
+      case LambdaTerm.Var(nomVariable) =>
+        environnement.get(nomVariable) match
           case Some(typeVariable) => typeVariable == typeAttendu
           case None => false
-        }
 
-      case Abs(nomParametre, typeParametre, corps) =>
-        // Pour vérifier une abstraction lambda λ(x:T).e, le type attendu doit être un type fonction
-        typeAttendu match {
-          // On vérifie si typeAttendu est bien un type fonction (A → B)
-          case FunctionType(typeEntree, typeSortie) if typeEntree == typeParametre =>
-            // Si le type d'entrée correspond au type déclaré du paramètre
-            // Par exemple, pour λ(x:N).x+3<5 avec typeAttendu=N→B, on vérifie N==N donc avec le N de λ(x:N)
-
-            // On vérifie ensuite si le corps a le type de sortie attendu
-            // On étend l'environnement pour que le corps puisse accéder au paramètre
-            // Pour notre exemple: verifierType("x+3<5", B, {x:N})
+      case LambdaTerm.Abs(nomParametre, typeParametre, corps) =>
+        typeAttendu match
+          case LambdaType.FunctionType(typeEntree, typeSortie) if typeEntree == typeParametre =>
             verifierType(corps, typeSortie, environnement + (nomParametre -> typeParametre))
-
-          // Si typeAttendu n'est pas un type fonction ou si les types d'entrée ne correspondent pas
-          // Par exemple, si on attendait B→N ou Int→B avec λ(x:Bool)...
           case _ => false
-        }
-    }
 
-    def infererType(terme: LambdaTerm, environnement: Environnement): LambdaType = {
-      terme match {
-        case Var(nomVariable) =>
-          // On cherche le type de la variable dans l'environnement
-          environnement.get(nomVariable) match {
-            case Some(typeVariable) => typeVariable
-            case None => throw new Exception(s"Variable $nomVariable non définie")
-          }
+      case LambdaTerm.App(t1, t2) =>
+        // Pour une application, on infère le type de t1 qui doit être une fonction
+        infererType(t1, environnement) match
+          case Some(LambdaType.FunctionType(typeEntree, typeSortie)) =>
+            // On vérifie que t2 a bien le type d'entrée de la fonction
+            verifierType(t2, typeEntree, environnement) && typeSortie == typeAttendu
+          case _ => false
 
-        case Abs(nomParametre, typeParametre, corps) =>
-          // On infère le type du corps en ajoutant le paramètre à l'environnement
-          val typeCorps = infererType(corps, environnement + (nomParametre -> typeParametre))
-          FunctionType(typeParametre, typeCorps)
+  // Deuxième fonction: inférer le type d'un terme
+  def infererType(terme: LambdaTerm, environnement: Environnement = Map()): Option[LambdaType] =
+    terme match
+      case LambdaTerm.Var(nomVariable) =>
+        // On cherche le type de la variable dans l'environnement
+        environnement.get(nomVariable)
 
-        case App(t1, t2) =>
-          // On infère les types des deux termes
-          val typeT1 = infererType(t1, environnement)
-          val typeT2 = infererType(t2, environnement)
+      case LambdaTerm.Abs(nomParametre, typeParametre, corps) =>
+        // On infère le type du corps avec le paramètre dans l'environnement
+        infererType(corps, environnement + (nomParametre -> typeParametre)) match
+          case Some(typeCorps) => Some(LambdaType.FunctionType(typeParametre, typeCorps))
+          case None => None
 
-          // On vérifie si t1 est une fonction et si t2 a le bon type d'entrée
-          typeT1 match {
-            case FunctionType(typeEntree, typeSortie) if typeEntree == typeT2 => typeSortie
-            case _ => throw new Exception("Application de fonction invalide")
-          }
-      }
-    }
-  }
-
-
+      case LambdaTerm.App(t1, t2) =>
+        // On infère le type de t1 (qui doit être une fonction) et t2
+        infererType(t1, environnement) match
+          case Some(LambdaType.FunctionType(typeEntree, typeSortie)) =>
+            // On vérifie que t2 a bien le type d'entrée de la fonction
+            infererType(t2, environnement) match
+              case Some(typeT2) if typeT2 == typeEntree => Some(typeSortie)
+              case _ => None
+          case _ => None

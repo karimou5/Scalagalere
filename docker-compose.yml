@@ -1,0 +1,15 @@
+
+
+services:
+  scala:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - .:/app
+    tty: true
+    stdin_open: true
+    environment:
+      - TERM=xterm-256color
+    ports:
+      - "9000:9000"  # Pour tests éventuels et serveur de dev
