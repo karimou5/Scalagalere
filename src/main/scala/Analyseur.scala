@@ -15,7 +15,7 @@ object Analyseur:
   // Termes du lambda calcul
   // val variable = LambdaTerm.Var("x")
   // val abstraction = LambdaTerm.Abs("x", intType, LambdaTerm.Var("x"))
-  // val application = LambdaTerm.App(abstraction, LambdaTerm.Var("y"))
+  // val application = LambdaTerm.App(abstraction, LambdaTerm.Var("y")) du coup c'est égal à λx:Int.x y
   enum LambdaTerm:
     case Var(varName: String)
     case Abs(varName: String, varType: LambdaType, t: LambdaTerm)
@@ -52,4 +52,33 @@ object Analyseur:
           case _ => false
         }
     }
+
+    def infererType(terme: LambdaTerm, environnement: Environnement): LambdaType = {
+      terme match {
+        case Var(nomVariable) =>
+          // On cherche le type de la variable dans l'environnement
+          environnement.get(nomVariable) match {
+            case Some(typeVariable) => typeVariable
+            case None => throw new Exception(s"Variable $nomVariable non définie")
+          }
+
+        case Abs(nomParametre, typeParametre, corps) =>
+          // On infère le type du corps en ajoutant le paramètre à l'environnement
+          val typeCorps = infererType(corps, environnement + (nomParametre -> typeParametre))
+          FunctionType(typeParametre, typeCorps)
+
+        case App(t1, t2) =>
+          // On infère les types des deux termes
+          val typeT1 = infererType(t1, environnement)
+          val typeT2 = infererType(t2, environnement)
+
+          // On vérifie si t1 est une fonction et si t2 a le bon type d'entrée
+          typeT1 match {
+            case FunctionType(typeEntree, typeSortie) if typeEntree == typeT2 => typeSortie
+            case _ => throw new Exception("Application de fonction invalide")
+          }
+      }
+    }
   }
+
+
