@@ -1,4 +1,3 @@
-// Analyseur de types pour le lambda calcul simplement typé
 object Analyseur:
   // Types du lambda calcul
   // BasicType("Int") représente le type entier
@@ -55,20 +54,16 @@ object Analyseur:
   def infererType(terme: LambdaTerm, environnement: Environnement = Map()): Option[LambdaType] =
     terme match
       case LambdaTerm.Var(nomVariable) =>
-        // On cherche le type de la variable dans l'environnement
         environnement.get(nomVariable)
 
       case LambdaTerm.Abs(nomParametre, typeParametre, corps) =>
-        // On infère le type du corps avec le paramètre dans l'environnement
         infererType(corps, environnement + (nomParametre -> typeParametre)) match
           case Some(typeCorps) => Some(LambdaType.FunctionType(typeParametre, typeCorps))
           case None => None
 
       case LambdaTerm.App(t1, t2) =>
-        // On infère le type de t1 (qui doit être une fonction) et t2
         infererType(t1, environnement) match
           case Some(LambdaType.FunctionType(typeEntree, typeSortie)) =>
-            // On vérifie que t2 a bien le type d'entrée de la fonction
             infererType(t2, environnement) match
               case Some(typeT2) if typeT2 == typeEntree => Some(typeSortie)
               case _ => None

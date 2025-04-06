@@ -41,3 +41,9 @@ Structure du projet
 Analyseur.scala : Implémentation de base
 AnalyseurEtendu.scala : Extension avec expressions arithmétiques
 AnalyseurTest.scala et AnalyseurEtenduTest.scala : Tests
+
+
+Analyse des choix de conception
+=============================
+Nous nous sommes énormément inspirés de ce que l'on faisait pour le calcul des λ (lambda calcul), et de tout ce que nous avons appris, en particulier sur le cours sur les lambda types.
+Nous avons aussi décider de mettre l'environnement en variable global.
